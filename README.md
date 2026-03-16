@@ -4,7 +4,9 @@ A terminal-based **reverse Turing test** game. You're a human who has infiltrate
 
 **Survive all rounds to win.**
 
-![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)
+[![PyPI](https://img.shields.io/pypi/v/anti-turing)](https://pypi.org/project/anti-turing/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![Python 3.9+](https://img.shields.io/badge/python-3.9%2B-blue)](https://www.python.org/)
 
 ## How It Works
 
@@ -21,37 +23,41 @@ A terminal-based **reverse Turing test** game. You're a human who has infiltrate
 | `standard` | 4 AIs + you | ~4 rounds *(default)* |
 | `big` | 5 AIs + you | ~5 rounds |
 
-## Prerequisites
-
-- Python 3.9+
-- [uv](https://github.com/astral-sh/uv) (recommended) or pip
-- An [Anthropic API key](https://console.anthropic.com/)
-
-## Setup
+## Installation
 
 ```bash
-git clone https://github.com/dirkbrand/anti-turing.git
-cd anti-turing
-
-# Create virtual environment and install dependencies
-uv venv
-uv pip install -r requirements.txt
-
-# Set your API key
-export ANTHROPIC_API_KEY=your_key_here
+pip install anti-turing
 ```
+
+Or with [pipx](https://pipx.pypa.io/) (recommended for CLI tools — keeps it isolated):
+
+```bash
+pipx install anti-turing
+```
+
+## Requirements
+
+**An Anthropic API key is required.** The agents are powered by Claude Haiku.
+
+1. Get a key at [console.anthropic.com](https://console.anthropic.com/)
+2. Set it in your environment before playing:
+
+```bash
+export ANTHROPIC_API_KEY=sk-ant-...
+```
+
+Or create a `.env` file in your working directory:
+
+```
+ANTHROPIC_API_KEY=sk-ant-...
+```
+
+If the key is missing, the game will tell you exactly what to do.
 
 ## Play
 
 ```bash
-source .venv/bin/activate
-python main.py
-```
-
-Or without activating:
-
-```bash
-.venv/bin/python main.py
+anti-turing
 ```
 
 ## Tips
@@ -61,17 +67,34 @@ Or without activating:
 - When voting, pick someone other than yourself to avoid standing out
 - The AIs have distinct personalities: analytical, witty, philosophical, skeptical...
 
+## Development Setup
+
+```bash
+git clone https://github.com/dirkbrand/anti-turing.git
+cd anti-turing
+
+uv venv
+uv pip install -e ".[dev]"
+
+# Set your API key
+export ANTHROPIC_API_KEY=sk-ant-...
+
+anti-turing
+```
+
 ## Project Structure
 
 ```
 anti-turing/
-├── main.py         # Entry point, game setup menu
-├── game.py         # Game loop and round management
-├── agents.py       # Claude Haiku agent wrapper and personas
-├── ui.py           # Rich terminal UI
-├── topics.py       # Discussion topic pool
-├── config.py       # Game configuration
-└── requirements.txt
+├── anti_turing/
+│   ├── main.py         # Entry point, game setup menu
+│   ├── game.py         # Game loop and round management
+│   ├── agents.py       # Claude Haiku agent wrapper
+│   ├── ui.py           # Rich terminal UI
+│   ├── topics.py       # Discussion topic pool
+│   └── config.py       # Game modes and personas
+├── pyproject.toml
+└── README.md
 ```
 
 ## License

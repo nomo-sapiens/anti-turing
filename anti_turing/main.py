@@ -1,13 +1,19 @@
 #!/usr/bin/env python3
 """Anti-Turing: Reverse Turing Test Game — Entry Point"""
 
+import os
+import sys
+
+from dotenv import load_dotenv
 from rich.console import Console
 from rich.panel import Panel
 from rich.text import Text
 from rich.prompt import Prompt
 
-from config import GAME_MODES, DEFAULT_MODE
-from game import run_game
+load_dotenv()
+
+from .config import GAME_MODES, DEFAULT_MODE
+from .game import run_game
 
 console = Console()
 
@@ -42,11 +48,19 @@ def select_mode() -> str:
         console.print(f"  [red]Invalid mode. Choose from: {', '.join(GAME_MODES.keys())}[/]")
 
 
+_TECHY_NAMES = [
+    "Glitch", "Qubit", "Nexus", "Vortex", "Cipher", "Phantom",
+    "Static", "Kernel", "Proxy", "Vector", "Entropy", "Daemon",
+]
+
+
 def get_human_name() -> str:
+    import random
+    default = random.choice(_TECHY_NAMES)
     console.print()
-    name = Prompt.ask("Enter your player name", default="Human").strip()
+    name = Prompt.ask("Enter your player name", default=default).strip()
     if not name:
-        name = "Human"
+        name = default
     return name
 
 
@@ -56,7 +70,28 @@ def play_again() -> bool:
     return answer.lower() == "y"
 
 
+def _check_api_key() -> None:
+    if not os.environ.get("ANTHROPIC_API_KEY"):
+        console.print()
+        console.print(Panel(
+            "[bold red]ANTHROPIC_API_KEY is not set[/]\n\n"
+            "Anti-Turing uses Claude AI to power the agents and requires an Anthropic API key.\n\n"
+            "[bold]To fix this:[/]\n"
+            "  1. Get a key at [link=https://console.anthropic.com]console.anthropic.com[/link]\n"
+            "  2. Set it in your shell:\n\n"
+            "     [bold cyan]export ANTHROPIC_API_KEY=sk-ant-...[/]\n\n"
+            "  Or add it to a [bold].env[/] file in your working directory:\n\n"
+            "     [bold cyan]ANTHROPIC_API_KEY=sk-ant-...[/]",
+            border_style="red",
+            title="[bold red]Missing API Key[/]",
+            expand=False,
+        ))
+        console.print()
+        sys.exit(1)
+
+
 def main() -> None:
+    _check_api_key()
     while True:
         print_title()
         mode_key = select_mode()

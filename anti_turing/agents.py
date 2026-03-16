@@ -2,11 +2,13 @@ from __future__ import annotations
 
 import anthropic
 
-from config import CLAUDE_MODEL
+from .config import CLAUDE_MODEL
 
 
 class Agent:
     def __init__(self, name: str, persona: str, client: anthropic.Anthropic):
+        if not client.api_key:
+            raise ValueError("Anthropic API key is not set. Please set the ANTHROPIC_API_KEY environment variable.")
         self.name = name
         self.persona = persona
         self.client = client

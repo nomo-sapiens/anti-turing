@@ -5,10 +5,10 @@ import time
 
 import anthropic
 
-from config import GameMode, AGENT_PERSONAS, MESSAGES_PER_PLAYER_PER_ROUND
-from agents import Agent
-from topics import get_random_topic
-import ui
+from .config import GameMode, AGENT_PERSONAS, MESSAGES_PER_PLAYER_PER_ROUND
+from .agents import Agent
+from .topics import get_random_topic
+from . import ui
 
 
 class Player:
@@ -58,11 +58,7 @@ def run_game(mode: GameMode, human_name: str) -> None:
         round_num += 1
         topic = get_random_topic()
 
-        ui.clear()
-        ui.print_header(round_num, mode.num_agents, topic, alive_names, human_name)
-
         # --- Chat phase ---
-        ui.print_section("DISCUSSION")
         chat_history: list[dict] = []
 
         # Each player speaks MESSAGES_PER_PLAYER_PER_ROUND times
@@ -73,6 +69,8 @@ def run_game(mode: GameMode, human_name: str) -> None:
             random.shuffle(shuffled)
             turn_order.extend(shuffled)
 
+        ui.redraw_screen(players, round_num, topic, chat_history, human_name)
+
         for player in turn_order:
             if not player.alive:
                 continue
@@ -81,18 +79,18 @@ def run_game(mode: GameMode, human_name: str) -> None:
                 if not msg:
                     msg = "..."
                 chat_history.append({"speaker": player.name, "text": msg})
-                ui.print_chat_message(player.name, msg, alive_names, human_name, is_human=True)
+                ui.redraw_screen(players, round_num, topic, chat_history, human_name)
             else:
-                ui.print_thinking(player.name)
+                ui.redraw_screen(players, round_num, topic, chat_history, human_name, thinking_name=player.name)
                 msg = player.agent.generate_message(topic, chat_history, alive_names, human_name)
-                time.sleep(0.4)  # small dramatic pause
-                # Clear the "typing..." line
-                print(" " * 60, end="\r")
+                time.sleep(0.4)
                 chat_history.append({"speaker": player.name, "text": msg})
-                ui.print_chat_message(player.name, msg, alive_names, human_name, is_human=False)
-                time.sleep(0.2)
+                ui.redraw_screen(players, round_num, topic, chat_history, human_name)
+                ui.prompt_continue()
 
         # --- Vote phase ---
+        ui.clear()
+        ui.print_room(players, round_num, topic)
         ui.print_section("VOTE")
 
         votes: dict[str, str] = {}   # voter -> voted_for
@@ -100,9 +98,9 @@ def run_game(mode: GameMode, human_name: str) -> None:
 
         # Human votes
         candidates = [p.name for p in alive if p.name != human_name]
-        human_vote = ui.prompt_human_vote(human_name, candidates)
+        human_vote, human_reason = ui.prompt_human_vote(human_name, candidates)
         votes[human_name] = human_vote
-        reasons[human_name] = "gut feeling"
+        reasons[human_name] = human_reason
 
         # Agents vote
         for player in alive:
@@ -125,14 +123,13 @@ def run_game(mode: GameMode, human_name: str) -> None:
         eliminated_name = random.choice(top_candidates)  # random tiebreak
 
         ui.print_vote_reveal(votes, reasons, eliminated_name, human_name, alive_names)
+        ui.prompt_continue()
 
         # Mark eliminated
         for player in players:
             if player.name == eliminated_name:
                 player.alive = False
                 break
-
-        time.sleep(1.5)
 
         # Check lose condition
         if eliminated_name == human_name:
